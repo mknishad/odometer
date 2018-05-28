@@ -5,17 +5,25 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.widget.TextView;
 
 import java.util.Locale;
+
+import static com.hfad.odometer.OdometerService.PERMISSION_STRING;
 
 public class MainActivity extends Activity {
 
     private OdometerService odometer;
     private boolean bound = false;
+    private final int PERMISSION_REQUEST_CODE = 698;
 
     private ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -41,8 +49,14 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        Intent intent = new Intent(this, OdometerService.class);
-        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+        if (ContextCompat.checkSelfPermission(this, PERMISSION_STRING) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{PERMISSION_STRING},
+                    PERMISSION_REQUEST_CODE);
+        } else {
+            Intent intent = new Intent(this, OdometerService.class);
+            bindService(intent, connection, Context.BIND_AUTO_CREATE);
+        }
     }
 
     @Override
@@ -51,6 +65,20 @@ public class MainActivity extends Activity {
         if (bound) {
             unbindService(connection);
             bound = false;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_CODE: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Intent intent = new Intent(this, OdometerService.class);
+                    bindService(intent, connection, Context.BIND_AUTO_CREATE);
+                } else {
+
+                }
+            }
         }
     }
 
@@ -65,6 +93,7 @@ public class MainActivity extends Activity {
                     distance = odometer.getDistance();
                 }
                 String distanceString = String.format(Locale.getDefault(), "%1$,.2f miles", distance);
+                Log.e("distanceString", distanceString);
                 distanceView.setText(distanceString);
                 handler.postDelayed(this, 1000);
             }

@@ -13,6 +13,7 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 
 public class OdometerService extends Service {
 
@@ -35,6 +36,7 @@ public class OdometerService extends Service {
         listener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
+                Log.e("OdometerService", "onLocationChanged()");
                 if (lastLocation == null) {
                     lastLocation = location;
                 }
@@ -85,6 +87,7 @@ public class OdometerService extends Service {
     }
 
     public double getDistance() {
+        Log.e("OdometerService", "distanceInMeters: " + distanceInMeters);
         return this.distanceInMeters / 1609.344;
     }
 }
